@@ -45,11 +45,39 @@ android-arm64 on ubuntu and ios-sim-arm64 on `macos-14`, uploading the archives.
 `test-ecl` lane and are cross-compiled into app images. `(stack-mobile:mobile-subset)`
 reads it; `(stack-mobile:device-subset)` drops host-only entries (Ironclad).
 
+## Static FFI
+
+`scripts/build-static-ffi.sh [host|android-arm64]` links one executable from
+static `libecl.a`, sqlite3 and libuv, with CFFI's whole closure compiled for the
+target (`compile-file :target`, `:system-p t`). With the `:cffi-static-link`
+feature, the [`egao1980/cffi`](https://github.com/egao1980/cffi) branch
+`cursor/ecl-static-ffi-1989` emits `ffi:c-inline` calls (plain `extern` symbols
+resolved by the linker), and `define-foreign-library` / `use-foreign-library`
+mark the library `:static` instead of calling `dlopen`. The uv grovel file runs
+on the host. Both targets print the library versions; android-arm64 is a static
+bionic executable run like `hello-ecl`. The driver is
+[`static-ffi/build.lisp`](static-ffi/build.lisp).
+
 ## Not yet
 
-Bridge frames (JSON over JNI / `WKScriptMessageHandler`), host shells, OCI
-overlays with `platform.os` `android` / `ios`, and the `stack-mobile` CLI are
-later P0/P1 steps.
+Bridge frames (JSON over JNI / `WKScriptMessageHandler`), host shells, and the
+`stack-mobile` CLI are later P0/P1 steps.
+
+OCI overlays for `platform.os` `android` / `ios` need these changes in
+cl-repository:
+
+- `platform-resolver`: `detect-local-os` knows only linux/darwin/windows/bsd.
+  ECL android has `:android :unix` but no `:linux`, so the OS resolves to `nil`,
+  and `platform-matches-p` treats `nil` as "any" (a linux overlay would be
+  pulled). iOS ECL reports `:darwin`. `detect-local-arch` needs `:aarch64`
+  (ECL's feature; `:arm64` only comes from trivial-features).
+- Mobile pulls happen on the build host, so the resolver needs an explicit
+  target platform (from `target-info.lisp`) instead of `*features*` detection.
+- Platform values: `android`/`arm64`, `ios`/`arm64` with the simulator as
+  `os.features: ["simulator"]` (or `variant`), and `js`/`wasm` (Go's GOOS/GOARCH
+  for emscripten).
+- Overlay payload: static archives (`.a`) plus headers and the link flags from
+  `build-info.txt`, not `.so`/`.dylib`; plus a prebuilt grovel output per platform.
 
 ## License
 
