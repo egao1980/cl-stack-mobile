@@ -40,7 +40,9 @@ if ! already_built "$PREFIX"; then
   cd "$SRC"
   BUILD="$(sh ./src/config.guess)"
   log "configure wasm32-unknown-emscripten (build ${BUILD})"
-  emconfigure ./configure --host=wasm32-unknown-emscripten --build="$BUILD" \
+  # emconfigure forces HOST_CC to emsdk's clang, which targets x86_64 even in
+  # the arm64 emsdk image; GMP's build-compiler probe then fails.
+  emconfigure env HOST_CC="${BUILD_CC:-cc}" ./configure --host=wasm32-unknown-emscripten --build="$BUILD" \
     --with-cross-config="${SRC}/src/util/wasm32-unknown-emscripten.cross_config" \
     --prefix="$PREFIX" --disable-shared --with-tcp=no --with-cmp=no \
     >"${WORK}/wasm32/configure.log" 2>&1 \
