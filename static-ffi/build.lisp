@@ -11,7 +11,7 @@
 ;;;;   CSM_LISP_DIRS     colon-separated ASDF trees holding cffi (patched),
 ;;;;                     alexandria, babel, trivial-features
 ;;;;   CSM_NATIVE_LIBS   space-separated archives / link flags (libsqlite3.a libuv.a …)
-;;;;   CSM_GROVEL_FLAGS  C flags for the host grovel run (-I for uv.h)
+;;;;   CSM_GROVEL_FLAGS  optional: C flags for the host grovel run (-I for uv.h)
 ;;;;   CSM_GROVEL_OUTPUT optional: reuse this processed grovel file instead of grovelling
 ;;;;   CSM_OUTPUT        executable path
 ;;;;   CSM_WORK          scratch dir for objects
@@ -97,7 +97,7 @@ host pushed its own at load time; target-info only has ECL's base set."
   (load (merge-pathnames "package.lisp" *here*))
   (unless (env "CSM_GROVEL_OUTPUT" nil)
     (let ((cffi-grovel::*cc-flags*
-            (append (split (env "CSM_GROVEL_FLAGS") #\Space)
+            (append (split (or (env "CSM_GROVEL_FLAGS" nil) "") #\Space)
                     (symbol-value 'cffi-grovel::*cc-flags*))))
       (format t "~&; grovel ~a~%" grovel-out)
       (setf grovel-out

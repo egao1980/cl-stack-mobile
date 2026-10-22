@@ -8,7 +8,7 @@
   (with-open-file (in (%root-file "ecl.pin"))
     (loop for line = (read-line in nil)
           while line
-          for trimmed = (string-trim " " line)
+          for trimmed = (string-trim '(#\Space #\Tab #\Return) line)
           for eq = (position #\= trimmed)
           when (and eq (plusp (length trimmed)) (char/= (char trimmed 0) #\#))
             append (list (intern (substitute #\- #\_ (subseq trimmed 0 eq)) :keyword)
