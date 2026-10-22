@@ -1,0 +1,84 @@
+name: cross
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: wasm32
+            os: ubuntu-latest
+            script: build-ecl-wasm.sh
+          - target: android-arm64
+            os: ubuntu-latest
+            script: build-ecl-android.sh
+          - target: ios-sim-arm64
+            os: macos-14
+            script: build-ecl-ios-sim.sh
+    name: ${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      CL_STACK_MOBILE_CACHE: ${{ github.workspace }}/.cache/cl-stack-mobile
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Host packages
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends build-essential libgmp-dev qemu-user-static
+          else
+            brew list gmp >/dev/null 2>&1 || brew install gmp
+            sudo xcode-select -s /Applications/Xcode.app
+            xcodebuild -version
+          fi
+
+      - name: Toolchain cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CL_STACK_MOBILE_CACHE }}
+          key: ${{ runner.os }}-${{ runner.arch }}-csm-${{ matrix.target }}-${{ hashFiles('ecl.pin') }}
+
+      - name: Host ECL (cross compiler)
+        run: scripts/build-ecl-host.sh
+
+      - name: Host hello
+        run: scripts/verify-hello.sh host
+
+      - name: Build ${{ matrix.target }}
+        run: scripts/${{ matrix.script }} --hello
+
+      - name: Verify ${{ matrix.target }} hello
+        run: |
+          if [[ "${{ matrix.target }}" == wasm32 ]]; then
+            source "$CL_STACK_MOBILE_CACHE/emsdk/emsdk_env.sh" >/dev/null 2>&1 || true
+          fi
+          if [[ "${{ matrix.target }}" == android-arm64 ]]; then
+            PATH="${ANDROID_HOME}/ndk/$(sed -n 's/^NDK_REVISION=//p' ecl.pin)/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH"
+          fi
+          scripts/verify-hello.sh "${{ matrix.target }}"
+
+      - name: Upload ${{ matrix.target }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ecl-${{ matrix.target }}
+          path: |
+            out/${{ matrix.target }}/lib/*.a
+            out/${{ matrix.target }}/include
+            out/${{ matrix.target }}/target-info.lisp
+            out/${{ matrix.target }}/build-info.txt
+            out/${{ matrix.target }}/hello
+            out/${{ matrix.target }}/bin/hello-ecl
+          if-no-files-found: warn

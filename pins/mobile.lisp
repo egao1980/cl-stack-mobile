@@ -1,0 +1,36 @@
+;;;; Mobile subset: systems that must load and pass Rove on ECL (test-ecl lane,
+;;;; docs/MOBILE-APP-PLAN.md § ECL lane) and are cross-compiled into app images.
+;;;; One entry per ASDF system: (system :repo "egao1980/<repo>" [:natives (...)]).
+;;;; ui-protocol / app-protocol join when they exist (P0 steps 4–5).
+
+((:event-protocol :repo "event-protocol")
+ (:json-protocol :repo "json-protocol")
+ (:json-backend-jzon :repo "json-protocol")
+ (:json-backend-yason :repo "json-protocol")
+ (:json-patch :repo "json-patch")
+ (:html-protocol :repo "html-protocol")
+ (:toml-protocol :repo "toml-protocol")
+ (:cl-stack-config :repo "cl-stack-config")
+ (:cl-stack-pathlib :repo "cl-stack-pathlib")
+ (:datetime-protocol :repo "datetime-protocol")
+ (:cl-stack-tzdata :repo "cl-stack-tzdata")
+ (:log-protocol :repo "log-protocol")
+ (:sql-protocol :repo "sql-protocol")
+ (:sql-backend-sqlite3 :repo "sql-protocol" :natives ("sqlite3"))
+ (:sql-query :repo "sql-query")
+ (:sql-query-sqlite3 :repo "sql-query-sqlite3")
+ (:sql-orm :repo "sql-orm")
+ (:task-protocol :repo "task-protocol")
+ (:task-backend-sql :repo "task-backend-sql")
+ (:conversation-protocol :repo "conversation-protocol")
+ (:conversation-backend-sql :repo "conversation-backend-sql")
+ (:secrets-protocol :repo "secrets-protocol")
+ (:crypto-protocol :repo "crypto-protocol")
+ ;; Host CI only: Ironclad is excluded from on-device images (plan § Reject).
+ (:crypto-backend-ironclad :repo "crypto-backend-ironclad" :device nil)
+ (:i18n-protocol :repo "i18n-protocol")
+ (:l10n-protocol :repo "l10n-protocol")
+ (:http-protocol :repo "http-protocol")
+ (:sse-protocol :repo "sse-protocol")
+ (:ws-protocol :repo "ws-protocol")
+ (:ag-ui-protocol :repo "ag-ui-protocol"))

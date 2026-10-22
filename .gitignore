@@ -1,0 +1,9 @@
+cl-repo.lock
+.cl-repository/
+.qlot/
+*.fasl
+*.fas
+*.o
+.DS_Store
+/out/
+/work/

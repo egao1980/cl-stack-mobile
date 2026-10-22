@@ -1,0 +1,14 @@
+# Pinned ECL for every cl-stack-mobile target. Sourced by scripts/common.sh.
+# Bump = new commit in egao1980/ecl (mirror of upstream + our patches) and a
+# green cross.yml run on every target.
+ECL_REPO=https://github.com/egao1980/ecl
+ECL_UPSTREAM=https://gitlab.com/embeddable-common-lisp/ecl
+ECL_VERSION=26.5.5
+ECL_COMMIT=74780fa2cd2874889793a657d55b557488d3e346
+
+# Toolchains (fetched into $CL_STACK_MOBILE_CACHE, never installed system-wide).
+NDK_VERSION=r27c
+NDK_REVISION=27.2.12479018
+ANDROID_API=24
+EMSDK_VERSION=4.0.12
+IOS_MIN_VERSION=15.0
