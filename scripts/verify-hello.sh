@@ -8,16 +8,6 @@
 source "$(dirname "$0")/common.sh"
 
 target="${1:?target}"
-run_android() {
-  local bin="$1"
-  if [[ "$(uname -s)/$(uname -m)" == Linux/aarch64 ]]; then "$bin"
-  elif command -v qemu-aarch64-static >/dev/null 2>&1; then qemu-aarch64-static "$bin"
-  elif command -v qemu-aarch64 >/dev/null 2>&1; then qemu-aarch64 "$bin"
-  elif command -v docker >/dev/null 2>&1; then
-    docker run --rm --platform linux/arm64 -v "$(dirname "$bin"):/x:ro" alpine "/x/$(basename "$bin")"
-  else die "no way to run an arm64 binary here"
-  fi
-}
 
 case "$target" in
   host)

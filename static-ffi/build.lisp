@@ -127,6 +127,10 @@ host pushed its own at load time; target-info only has ECL's base set."
       (c:build-program output
                        :lisp-files (cons libasdf (reverse objects))
                        :ld-flags (split (env "CSM_NATIVE_LIBS") #\Space)
+                       ;; The pool's "SYS:help.doc" entry makes any DOCUMENTATION
+                       ;; lookup open a file that does not exist on a device.
+                       :prologue-code '(setq si::*documentation-pool*
+                                        (remove-if #'stringp si::*documentation-pool*))
                        :epilogue-code '(handler-case
                                         (progn (funcall (intern "MAIN" "STATIC-FFI-SPIKE"))
                                                (ext:quit 0))

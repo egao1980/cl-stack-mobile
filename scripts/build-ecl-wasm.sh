@@ -52,6 +52,11 @@ if ! already_built "$PREFIX"; then
   rm -rf "$PREFIX"
   emmake make install >"${WORK}/wasm32/install.log" 2>&1
   cp build/bin/ecl.js build/bin/ecl.wasm "$PREFIX/"
+  # emscripten uses ECL's flatinstall (libdir = includedir = prefix); expose the
+  # lib/ + include/ layout the other targets have.
+  mkdir -p "$PREFIX/lib" "$PREFIX/include"
+  cp "$PREFIX"/*.a "$PREFIX"/target-info.lsp "$PREFIX/lib/"
+  cp -R "$PREFIX/ecl" "$PREFIX/include/ecl"
   finish_install "$PREFIX" wasm32-emscripten "$LINK_FLAGS"
 fi
 
