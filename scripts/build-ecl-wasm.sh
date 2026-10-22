@@ -40,7 +40,9 @@ if ! already_built "$PREFIX"; then
   cd "$SRC"
   BUILD="$(sh ./src/config.guess)"
   log "configure wasm32-unknown-emscripten (build ${BUILD})"
-  emconfigure ./configure --host=wasm32-unknown-emscripten --build="$BUILD" \
+  # emconfigure forces HOST_CC to emsdk's clang, which targets x86_64 even in
+  # the arm64 emsdk image; GMP's build-compiler probe then fails.
+  emconfigure env HOST_CC="${BUILD_CC:-cc}" ./configure --host=wasm32-unknown-emscripten --build="$BUILD" \
     --with-cross-config="${SRC}/src/util/wasm32-unknown-emscripten.cross_config" \
     --prefix="$PREFIX" --disable-shared --with-tcp=no --with-cmp=no \
     >"${WORK}/wasm32/configure.log" 2>&1 \
@@ -50,6 +52,11 @@ if ! already_built "$PREFIX"; then
   rm -rf "$PREFIX"
   emmake make install >"${WORK}/wasm32/install.log" 2>&1
   cp build/bin/ecl.js build/bin/ecl.wasm "$PREFIX/"
+  # emscripten uses ECL's flatinstall (libdir = includedir = prefix); expose the
+  # lib/ + include/ layout the other targets have.
+  mkdir -p "$PREFIX/lib" "$PREFIX/include"
+  cp "$PREFIX"/*.a "$PREFIX"/target-info.lsp "$PREFIX/lib/"
+  cp -R "$PREFIX/ecl" "$PREFIX/include/ecl"
   finish_install "$PREFIX" wasm32-emscripten "$LINK_FLAGS"
 fi
 

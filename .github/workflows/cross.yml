@@ -82,3 +82,48 @@ jobs:
             out/${{ matrix.target }}/hello
             out/${{ matrix.target }}/bin/hello-ecl
           if-no-files-found: warn
+
+  static-ffi:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: host, os: ubuntu-latest }
+          - { target: host, os: macos-14 }
+          - { target: android-arm64, os: ubuntu-latest }
+    name: static-ffi ${{ matrix.target }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    env:
+      CL_STACK_MOBILE_CACHE: ${{ github.workspace }}/.cache/cl-stack-mobile
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Host packages
+        run: |
+          if [[ "$RUNNER_OS" == Linux ]]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y --no-install-recommends build-essential cmake libgmp-dev libffi-dev \
+              libsqlite3-dev libuv1-dev qemu-user-static
+          else
+            brew install gmp sqlite libuv
+          fi
+
+      - name: Toolchain cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.CL_STACK_MOBILE_CACHE }}
+          key: ${{ runner.os }}-${{ runner.arch }}-csm-static-ffi-${{ matrix.target }}-${{ hashFiles('ecl.pin', 'scripts/build-static-ffi.sh') }}
+
+      - name: Static ECL + CFFI (sqlite3, libuv)
+        run: scripts/build-static-ffi.sh ${{ matrix.target }}
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: static-ffi-${{ matrix.target }}-${{ matrix.os }}
+          path: |
+            work/static-ffi-${{ matrix.target }}/run.txt
+            work/static-ffi-${{ matrix.target }}/ldd.txt
+          if-no-files-found: warn
