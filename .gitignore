@@ -7,3 +7,6 @@ cl-repo.lock
 .DS_Store
 /out/
 /work/
+*.dx64fsl
+*.lx64fsl
+*.wx64fsl
